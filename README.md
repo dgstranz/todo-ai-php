@@ -42,3 +42,13 @@ La base de datos se creará automáticamente en el primer acceso.
 - Indicador visual para tareas vencidas
 - Opción para reiniciar la base de datos
 - Exportación de tareas en formato JSON 
+
+## Sinopsis de la creación de la aplicación
+
+| Yo | Cursor |
+|----|--------|
+| Definición de requisitos y funcionalidades | Generación del código base y estructura |
+| Revisión y ajuste del código generado | Implementación de funcionalidades principales |
+| Pruebas de integración y corrección de errores | Optimización y mejoras de rendimiento |
+| Documentación y comentarios del código | Sugerencias de mejoras y características adicionales |
+
