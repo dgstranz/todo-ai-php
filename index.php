@@ -90,7 +90,9 @@ if (isset($_GET['export'])) {
             background-color: #fff3cd !important;
         }
         .completed {
-            text-decoration: line-through;
+            color: #6c757d;
+        }
+        .completed h5 {
             color: #6c757d;
         }
     </style>
@@ -269,7 +271,7 @@ if (isset($_GET['export'])) {
                 const hoursLeft = timeDiff / (1000 * 60 * 60);
                 
                 let taskClass = '';
-                if (task.completed) {
+                if (parseInt(task.completed) === 1) {
                     taskClass = 'completed';
                 } else if (timeDiff < 0) {
                     taskClass = 'task-overdue';
@@ -324,9 +326,9 @@ if (isset($_GET['export'])) {
                         <div class="d-flex justify-content-between align-items-start">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" 
-                                       ${task.completed ? 'checked' : ''}
+                                       ${parseInt(task.completed) === 1 ? 'checked' : ''}
                                        onchange="toggleTask(${task.id}, this.checked)">
-                                <label class="form-check-label ${task.completed ? 'completed' : ''}">
+                                <label class="form-check-label ${parseInt(task.completed) === 1 ? 'completed' : ''}">
                                     <h5 class="card-title mb-0">${task.title}</h5>
                                 </label>
                             </div>
@@ -430,36 +432,42 @@ if (isset($_GET['export'])) {
 
         // Función para editar una tarea
         function editTask(taskId) {
-            fetch('api/tasks.php')
-                .then(response => response.json())
-                .then(tasks => {
-                    const task = tasks.find(t => t.id === taskId);
-                    if (task) {
-                        const form = document.getElementById('taskForm');
-                        form.taskId.value = task.id;
-                        form.title.value = task.title;
-                        form.description.value = task.description || '';
-                        form.dueDate.value = task.due_date ? task.due_date.slice(0, 16) : '';
-                        form.tags.value = task.tags.join(', ');
+            console.log('Editando tarea:', taskId);
+            console.log('Todas las tareas:', allTasks);
+            const task = allTasks.find(t => parseInt(t.id) === parseInt(taskId));
+            console.log('Tarea encontrada:', task);
+            
+            if (task) {
+                const form = document.getElementById('taskForm');
+                const modalTitle = document.querySelector('#taskModal .modal-title');
+                modalTitle.textContent = 'Editar Tarea';
+                
+                form.taskId.value = task.id;
+                form.title.value = task.title;
+                form.description.value = task.description || '';
+                form.dueDate.value = task.due_date ? task.due_date.slice(0, 16) : '';
+                form.tags.value = task.tags.join(', ');
 
-                        const subtasksList = document.getElementById('subtasksList');
-                        subtasksList.innerHTML = '';
-                        task.subtasks.forEach(subtask => {
-                            const subtaskDiv = document.createElement('div');
-                            subtaskDiv.className = 'input-group mb-2';
-                            subtaskDiv.innerHTML = `
-                                <input type="text" class="form-control" value="${subtask.title}" required>
-                                <button class="btn btn-outline-danger" type="button" onclick="this.parentElement.remove()">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            `;
-                            subtasksList.appendChild(subtaskDiv);
-                        });
-
-                        const modal = new bootstrap.Modal(document.getElementById('taskModal'));
-                        modal.show();
-                    }
+                const subtasksList = document.getElementById('subtasksList');
+                subtasksList.innerHTML = '';
+                task.subtasks.forEach(subtask => {
+                    const subtaskDiv = document.createElement('div');
+                    subtaskDiv.className = 'input-group mb-2';
+                    subtaskDiv.innerHTML = `
+                        <input type="text" class="form-control" value="${subtask.title}" required>
+                        <button class="btn btn-outline-danger" type="button" onclick="this.parentElement.remove()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    `;
+                    subtasksList.appendChild(subtaskDiv);
                 });
+
+                const taskModal = document.getElementById('taskModal');
+                const modalInstance = new bootstrap.Modal(taskModal);
+                modalInstance.show();
+            } else {
+                console.error('No se encontró la tarea con ID:', taskId);
+            }
         }
 
         // Función para eliminar una tarea
@@ -496,7 +504,7 @@ if (isset($_GET['export'])) {
                 body: JSON.stringify({
                     action: 'toggle_task',
                     id: taskId,
-                    completed: completed
+                    completed: completed ? 1 : 0
                 })
             })
             .then(response => response.json())
@@ -517,7 +525,7 @@ if (isset($_GET['export'])) {
                 body: JSON.stringify({
                     action: 'toggle_subtask',
                     id: subtaskId,
-                    completed: completed
+                    completed: completed ? 1 : 0
                 })
             })
             .then(response => response.json())
@@ -532,6 +540,9 @@ if (isset($_GET['export'])) {
         document.getElementById('taskModal').addEventListener('show.bs.modal', function(event) {
             if (!event.relatedTarget.hasAttribute('data-task-id')) {
                 const form = document.getElementById('taskForm');
+                const modalTitle = document.querySelector('#taskModal .modal-title');
+                modalTitle.textContent = 'Nueva Tarea';
+                
                 form.reset();
                 form.taskId.value = '';
                 document.getElementById('subtasksList').innerHTML = '';
@@ -541,8 +552,15 @@ if (isset($_GET['export'])) {
         // Inicializar tooltips al cargar la página
         document.addEventListener('DOMContentLoaded', function() {
             loadTasks();
+            // Inicializar tooltips
             const tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
             tooltips.forEach(tooltip => new bootstrap.Tooltip(tooltip));
+            
+            // Inicializar el modal
+            const taskModal = document.getElementById('taskModal');
+            if (taskModal) {
+                new bootstrap.Modal(taskModal);
+            }
         });
     </script>
 </body>

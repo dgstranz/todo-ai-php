@@ -25,7 +25,10 @@ function getConnection() {
         die("Error al crear la base de datos: " . $conn->error);
     }
     
-    $conn->select_db(DB_NAME);
+    // Seleccionar la base de datos
+    if (!$conn->select_db(DB_NAME)) {
+        die("Error al seleccionar la base de datos: " . $conn->error);
+    }
     
     // Crear las tablas si no existen
     createTables($conn);
@@ -45,9 +48,9 @@ function createTables($conn) {
         description TEXT,
         start_date DATETIME DEFAULT CURRENT_TIMESTAMP,
         due_date DATETIME,
-        completed BOOLEAN DEFAULT FALSE,
+        completed TINYINT(1) DEFAULT 0,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )";
+    ) ENGINE=InnoDB";
     
     if ($conn->query($sql) === FALSE) {
         die("Error al crear la tabla tasks: " . $conn->error);
@@ -59,9 +62,9 @@ function createTables($conn) {
         task_id INT,
         title VARCHAR(255) NOT NULL,
         description TEXT,
-        completed BOOLEAN DEFAULT FALSE,
+        completed TINYINT(1) DEFAULT 0,
         FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE
-    )";
+    ) ENGINE=InnoDB";
     
     if ($conn->query($sql) === FALSE) {
         die("Error al crear la tabla subtasks: " . $conn->error);
@@ -71,7 +74,7 @@ function createTables($conn) {
     $sql = "CREATE TABLE IF NOT EXISTS tags (
         id INT AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(50) NOT NULL UNIQUE
-    )";
+    ) ENGINE=InnoDB";
     
     if ($conn->query($sql) === FALSE) {
         die("Error al crear la tabla tags: " . $conn->error);
@@ -84,7 +87,7 @@ function createTables($conn) {
         PRIMARY KEY (task_id, tag_id),
         FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
         FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
-    )";
+    ) ENGINE=InnoDB";
     
     if ($conn->query($sql) === FALSE) {
         die("Error al crear la tabla task_tags: " . $conn->error);
@@ -116,4 +119,4 @@ function truncateDatabase() {
     
     $conn->close();
     return $success;
-} 
+}
